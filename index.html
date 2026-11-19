@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lungout — Breakout in deinen Lungenflügeln</title>
+
+<meta name="description" content="Breakout in deinen Lungenflügeln: Die Steine sind zwei Lungenflügel mit Luftröhre, dein Schläger ist eine Filterzigarette, und jeder getroffene Stein löst sich in Rauch auf. Vier Züge, dann ist alles Qualm." />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Lungout" />
+<meta property="og:locale" content="de_DE" />
+<meta property="og:title" content="Lungout — Vier Züge. Zwei Lungenflügel. Null Reue." />
+<meta property="og:description" content="Zieh durch: ein Zug, ein Ball, ein Stein weniger. Der Qualm bleibt, wo er hingehört." />
+<meta property="og:url" content="https://www.lungout.de/" />
+<meta property="og:image" content="https://www.lungout.de/vorschau.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Zwei Lungenflügel aus Breakout-Steinen, ein Teil davon schon zu Rauch geworden, davor eine glimmende Filterzigarette als Schläger." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Lungout — Vier Züge. Zwei Lungenflügel. Null Reue." />
+<meta name="twitter:description" content="Breakout in deinen Lungenflügeln. Zieh durch, bis nichts mehr da ist." />
+<meta name="twitter:image" content="https://www.lungout.de/vorschau.png" />
+<meta name="theme-color" content="#06090c" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1016'/%3E%3Crect x='14' y='4' width='4' height='9' rx='1.5' fill='%23e7c39a'/%3E%3Crect x='5' y='12' width='10' height='13' rx='3' fill='%23d9507f'/%3E%3Crect x='17' y='12' width='10' height='13' rx='3' fill='%23e07a9b'/%3E%3Crect x='5' y='26' width='22' height='3' rx='1.5' fill='%23f3ecdd'/%3E%3Crect x='5' y='26' width='6' height='3' rx='1.5' fill='%23c8823a'/%3E%3C/svg%3E" />
+<style>
+  :root{
+    --ink:#eaf0f6;
+    --dim:#8ea0b2;
+    --acc:#ff8348;
+    --line:rgba(150,180,210,.14);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:
+      radial-gradient(1100px 620px at 50% -12%, #17222f 0%, #0c1117 52%, #05080b 100%);
+    color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    display:flex;align-items:center;justify-content:center;padding:16px;
+  }
+  .shell{width:min(1040px,100%)}
+  .brand{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin:0 0 10px;padding:0 2px}
+  .brand h1{margin:0;font-size:19px;font-weight:700;letter-spacing:.3em}
+  .brand h1 span{color:var(--acc)}
+  .brand p{margin:0;color:var(--dim);font-size:12.5px;letter-spacing:.06em}
+  .stage{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    background:#070a0e;box-shadow:0 30px 90px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.02)}
+  canvas{display:block;width:100%;height:auto;aspect-ratio:960/720;touch-action:none;cursor:none}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,rgba(5,8,11,.72),rgba(5,8,11,.9));
+    backdrop-filter:blur(3px);padding:24px;text-align:center}
+  .overlay[hidden]{display:none}
+  .card{max-width:min(560px,100%)}
+  .hint{display:none;margin:0 0 8px;padding:0 2px;color:var(--acc);font-size:12.5px;letter-spacing:.08em}
+  @media (max-width:760px){
+    .brand p{display:none}
+    .hint{display:block}
+    .foot{font-size:10.5px}
+  }
+  .card h2{margin:0 0 6px;font-size:30px;letter-spacing:.16em;font-weight:700}
+  .card h2 em{font-style:normal;color:var(--acc)}
+  .card .sub{margin:0 0 18px;color:var(--dim);font-size:14px;line-height:1.55}
+  .btn{appearance:none;border:0;border-radius:10px;padding:12px 26px;cursor:pointer;
+    font:inherit;font-size:14px;font-weight:700;letter-spacing:.14em;color:#1a0d07;
+    background:linear-gradient(180deg,#ffb072,var(--acc));box-shadow:0 10px 24px rgba(255,131,72,.28)}
+  .btn:hover{filter:brightness(1.08)}
+  .stats{display:flex;gap:22px;justify-content:center;margin:0 0 18px;font-size:12px;color:var(--dim);
+    letter-spacing:.12em;text-transform:uppercase}
+  .stats s{display:block;text-decoration:none;color:#fff;font-size:24px;letter-spacing:.04em;margin-top:4px}
+  .foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    margin-top:10px;padding:0 4px;color:var(--dim);font-size:11.5px;letter-spacing:.08em}
+  .foot kbd{font-family:ui-monospace,Consolas,monospace;color:#c9d6e2;background:rgba(255,255,255,.06);
+    border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="brand">
+    <h1>LUNG<span>OUT</span></h1>
+    <p>Vier Züge. Zwei Lungenflügel. Null Reue.</p>
+  </div>
+  <p class="hint">Quer legen — dann wird die Lunge größer.</p>
+
+  <div class="stage">
+    <canvas id="game" width="960" height="720"></canvas>
+    <div class="overlay" id="overlay"></div>
+  </div>
+
+  <div class="foot">
+    <span><kbd>Maus</kbd> / <kbd>&larr; &rarr;</kbd> Zigarette bewegen &nbsp;·&nbsp; <kbd>Leertaste</kbd> / <kbd>Klick</kbd> Abschuss</span>
+    <span><kbd>P</kbd> Pause &nbsp;·&nbsp; <kbd>R</kbd> Neustart &nbsp;·&nbsp; <kbd>M</kbd> Ton</span>
+  </div>
+</div>
+
+<script>
+"use strict";
+/*__MASK_START__*/
+/* Reine Layout-Logik: welche Spielfeldzelle gehört zu welchem Anatomie-Teil.
+   Alles in Pixeln des 960x720-Logikrasters. */
+const GRID = { W: 960, H: 720, cols: 18, rows: 16, gx: 84, gy: 60, fh: 466 };
+GRID.cw = (GRID.W - GRID.gx * 2) / GRID.cols;
+GRID.ch = GRID.fh / GRID.rows;
+
+const CX = GRID.W / 2;
+
+const SHAPE = {
+  trachea:  { half: 31, y0: 54, y1: 196 },
+  carina:   { x: CX, y: 196 },
+  bronchus: [ { x2: CX - 112, y2: 302 }, { x2: CX + 112, y2: 302 } ],
+  bronchusHalf: 17,
+  lung:     { cy: 432, ry: 232, left: { cx: CX - 194, rx: 172 }, right: { cx: CX + 194, rx: 172 } },
+  /* Ausschnitte: Hilus (Lungenwurzel) beidseits + Herzkerbe am linken Flügel */
+  cuts:     [ { x: CX - 18, y: 350, r: 46 }, { x: CX + 18, y: 350, r: 46 },
+              { x: CX - 36, y: 478, r: 66 } ],
+  fissure:  [ { x1: CX - 118, y1: 300, x2: CX - 250, y2: 512 },
+              { x1: CX + 118, y1: 300, x2: CX + 250, y2: 512 } ], // Lappen-Lücken
+  fissureHalf: 11,
+  /* Bronchiolen: feines Astnetz IN den Flügeln (gespiegelt). */
+  bronchioles: (function () {
+    const L = [
+      [CX - 112, 302, CX - 186, 244],  // Apikalast
+      [CX - 112, 302, CX - 140, 400],  // Unterlappenstamm
+      [CX - 140, 400, CX - 196, 500],  // Basalast
+      [CX - 186, 244, CX - 250, 282],  // lateraler Oberlappenast
+      [CX - 140, 400, CX - 232, 430],  // lateraler Mittelast
+      [CX - 140, 400, CX - 72, 404],   // medialer Ast
+    ];
+    const R = L.map(function (s) { return [2 * CX - s[0], s[1], 2 * CX - s[2], s[3]]; });
+    return L.concat(R);
+  })(),
+  bronchioleHalf: 16,
+};
+
+function segDist(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const len2 = dx * dx + dy * dy || 1;
+  let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+  t = t < 0 ? 0 : (t > 1 ? 1 : t);
+  const qx = x1 + t * dx - px, qy = y1 + t * dy - py;
+  return Math.sqrt(qx * qx + qy * qy);
+}
+
+function cellCenter(c, r) {
+  return { x: GRID.gx + (c + 0.5) * GRID.cw, y: GRID.gy + (r + 0.5) * GRID.ch };
+}
+
+/* returns null | 'trachea' | 'bronchus' | 'bronchiole' | 'lobe' */
+function cellType(c, r) {
+  const p = cellCenter(c, r);
+  const br = SHAPE.bronchioles;
+  for (let i = 0; i < br.length; i++) {
+    if (segDist(p.x, p.y, br[i][0], br[i][1], br[i][2], br[i][3]) <= SHAPE.bronchioleHalf) return 'bronchiole';
+  }
+  if (p.y >= SHAPE.trachea.y0 - 8 && p.y <= SHAPE.trachea.y1 && Math.abs(p.x - CX) <= SHAPE.trachea.half) return 'trachea';
+  for (let i = 0; i < SHAPE.bronchus.length; i++) {
+    if (segDist(p.x, p.y, SHAPE.carina.x, SHAPE.carina.y, SHAPE.bronchus[i].x2, SHAPE.bronchus[i].y2) <= SHAPE.bronchusHalf) return 'bronchus';
+  }
+  const sides = [SHAPE.lung.left, SHAPE.lung.right];
+  for (let i = 0; i < 2; i++) {
+    const e = sides[i];
+    const nx = (p.x - e.cx) / e.rx, ny = (p.y - SHAPE.lung.cy) / SHAPE.lung.ry;
+    if (nx * nx + ny * ny > 1) continue;
+    let cutOut = false;
+    for (let k = 0; k < SHAPE.cuts.length; k++) {
+      const q = SHAPE.cuts[k];
+      if (Math.hypot(p.x - q.x, p.y - q.y) < q.r) { cutOut = true; break; }
+    }
+    if (cutOut) continue;                                      // Hilus / Herzkerbe
+    let inFissure = false;
+    for (let f = 0; f < SHAPE.fissure.length; f++) {
+      const s = SHAPE.fissure[f];
+      if (segDist(p.x, p.y, s.x1, s.y1, s.x2, s.y2) <= SHAPE.fissureHalf) { inFissure = true; break; }
+    }
+    if (inFissure) continue;
+    return 'lobe';
+  }
+  return null;
+}
+/*__MASK_END__*/
+
+/* ------------------------------------------------------- Rauch-Sprites */
+const SMOKE_TINTS = [
+  [208, 212, 218], [226, 226, 230], [190, 196, 204],
+  [214, 178, 158], [186, 152, 160],
+];
+function makeSmokeSprite(tint, seed) {
+  const S = 128, c = document.createElement('canvas');
+  c.width = S; c.height = S;
+  const g = c.getContext('2d');
+  const blobs = [[64, 64, 52, 0.55], [48, 58, 30, 0.34], [82, 70, 26, 0.3], [62, 84, 24, 0.26]];
+  let rnd = seed * 9301 % 233280 / 233280;
+  for (const b of blobs) {
+    const bx = b[0] + (rnd - 0.5) * 16, by = b[1] + (rnd - 0.5) * 16; rnd = (rnd * 7.13) % 1;
+    const rg = g.createRadialGradient(bx, by, 0, bx, by, b[2]);
+    rg.addColorStop(0, 'rgba(' + tint[0] + ',' + tint[1] + ',' + tint[2] + ',' + b[3] + ')');
+    rg.addColorStop(0.55, 'rgba(' + tint[0] + ',' + tint[1] + ',' + tint[2] + ',' + (b[3] * 0.34) + ')');
+    rg.addColorStop(1, 'rgba(' + tint[0] + ',' + tint[1] + ',' + tint[2] + ',0)');
+    g.fillStyle = rg; g.beginPath(); g.arc(bx, by, b[2], 0, 6.284); g.fill();
+  }
+  return c;
+}
+const SPRITES = [];
+for (let t = 0; t < SMOKE_TINTS.length; t++) for (let k = 0; k < 3; k++) SPRITES.push(makeSmokeSprite(SMOKE_TINTS[t], t * 3 + k + 1));
+
+/* haze layer: Rauch, der sich im Feld ablagert */
+const hazeCanvas = document.createElement('canvas');
+hazeCanvas.width = GRID.W; hazeCanvas.height = GRID.H;
+const hazeCtx = hazeCanvas.getContext('2d');
+
+/* ------------------------------------------------------------- Audio */
+let AC = null, muted = false;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } return AC; }
+function noiseBurst(dur, freq, q, gain) {
+  const a = audio(); if (!a || muted) return;
+  const n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 1.6);
+  const src = a.createBufferSource(); src.buffer = buf;
+  const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+  const g = a.createGain(); g.gain.value = gain;
+  src.connect(bp); bp.connect(g); g.connect(a.destination); src.start();
+}
+function tone(freq, dur, gain, type) {
+  const a = audio(); if (!a || muted) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'triangle'; o.frequency.value = freq;
+  g.gain.setValueAtTime(gain, a.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+  o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + dur);
+}
+
+/* -------------------------------------------------------- Spielobjekte */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const MAX_LEVEL = 3;
+
+const game = {
+  state: 'menu', level: 1, score: 0, lives: 4, tar: 0, popped: 0,
+  total: 0, left: 0, t: 0, toast: '', toastT: 0, freeze: 0, best: 0,
+  advancing: false, lastHit: 0,
+};
+let grid = [];
+let dying = [];
+let parts = [];
+let pending = [];
+let powermsg = [];
+
+const paddle = { x: CX, y: 638, w: 190, h: 17, target: CX, vel: 0, keyL: false, keyR: false, mode: 'pointer' };
+const ball = { x: CX, y: 600, vx: 0, vy: 0, r: 9, speed: 372, stuck: true, flare: 0, trail: 0 };
+
+const LEN = [190, 172, 154, 136];
+function paddleW() { return LEN[Math.max(0, Math.min(LEN.length - 1, LEN.length - game.lives))]; }
+
+function say(txt, dur) { game.toast = txt; game.toastT = dur || 1.6; }
+
+function buildLevel(lv) {
+  grid = []; dying = []; parts.length = 0; pending.length = 0;
+  hazeCtx.clearRect(0, 0, GRID.W, GRID.H);
+  let total = 0;
+  for (let r = 0; r < GRID.rows; r++) {
+    const row = [];
+    for (let c = 0; c < GRID.cols; c++) {
+      const type = cellType(c, r);
+      if (!type) { row.push(null); continue; }
+      const p = cellCenter(c, r);
+      const v = (p.y - GRID.gy) / GRID.fh;           // 0 oben .. 1 unten
+      let hp = 1;
+      if (type === 'trachea' || type === 'bronchus') hp = 2 + (lv > 2 ? 1 : 0);
+      const b = {
+        c: c, r: r, type: type, x: p.x - GRID.cw / 2, y: p.y - GRID.ch / 2,
+        w: GRID.cw, h: GRID.ch, hp: hp, maxhp: hp, alive: true, flash: 0,
+        v: v, seed: (c * 31 + r * 17) % 97,
+      };
+      row.push(b); total++;
+    }
+    grid.push(row);
+  }
+  /* Level 2+: verschleimte Brocken (2 Treffer, grünlich) */
+  if (lv >= 2) {
+    const lobes = [];
+    for (const row of grid) for (const b of row) if (b && b.type === 'lobe') lobes.push(b);
+    const n = Math.min(lobes.length, 10 + lv * 8);
+    for (let i = 0; i < n; i++) {
+      const b = lobes[Math.floor(Math.random() * lobes.length)];
+      b.hp = b.maxhp = 2; b.mucus = true;
+    }
+  }
+  game.total = total; game.left = total; game.tar = 0;
+  resetBall();
+}
+
+function resetBall() {
+  ball.stuck = true; ball.flare = 0;
+  ball.homing = false; ball.target = null;
+  game.lastHit = game.t;
+  ball.speed = 372 * Math.pow(1.12, game.level - 1);
+  ball.vx = 0; ball.vy = 0;
+  ball.x = paddle.x; ball.y = paddle.y - 26;
+  paddle.w = paddleW();
+}
+
+function launch() {
+  if (!ball.stuck) return;
+  if (AC && AC.state === 'suspended') AC.resume();
+  ball.stuck = false;
+  game.state = 'play';
+  const a = -Math.PI / 2 + (Math.random() - 0.5) * 0.7;
+  ball.vx = Math.cos(a) * ball.speed;
+  ball.vy = Math.sin(a) * ball.speed;
+  tone(300, 0.09, 0.05, 'square');
+  puff(ball.x, ball.y, 5, { spread: 70, tint: 3, r0: 3, r1: 16, life: 0.55, a: 0.28 });
+}
+
+/* ------------------------------------------------------------ Teilchen */
+function puff(x, y, n, o) {
+  o = o || {};
+  if (parts.length > 1500) return;
+  for (let i = 0; i < n; i++) {
+    const sp = (o.spread || 110) * (0.35 + Math.random() * 0.65);
+    const a = Math.random() * 6.284;
+    const life = (o.life || 1.5) * (0.7 + Math.random() * 0.7);
+    parts.push({
+      k: 'smoke',
+      x: x + (Math.random() - 0.5) * (o.box || 8),
+      y: y + (Math.random() - 0.5) * (o.box || 8),
+      vx: Math.cos(a) * sp * 0.7,
+      vy: Math.sin(a) * sp * 0.45 - (o.up || 26) * Math.random(),
+      r: (o.r0 || 5) * (0.7 + Math.random() * 0.7),
+      r1: (o.r1 || 30) * (0.7 + Math.random() * 0.8),
+      age: 0, life: life,
+      a: (o.a || 0.42) * (0.7 + Math.random() * 0.5),
+      sp2: SPRITES[(o.tint != null ? o.tint : Math.floor(Math.random() * 3)) * 3 + Math.floor(Math.random() * 3)],
+      rot: Math.random() * 6.284, spin: (Math.random() - 0.5) * 1.6,
+      ph: Math.random() * 6.284,
+    });
+  }
+}
+function embers(x, y, n, col) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * 6.284, s = 40 + Math.random() * 190;
+    parts.push({
+      k: 'ember', x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 30,
+      age: 0, life: 0.35 + Math.random() * 0.5, r: 1 + Math.random() * 1.8, col: col || '#ffb35c',
+    });
+  }
+}
+function ashFall(x, y, n) {
+  for (let i = 0; i < n; i++) {
+    parts.push({
+      k: 'ash', x: x + (Math.random() - 0.5) * 6, y: y,
+      vx: (Math.random() - 0.5) * 22, vy: 10 + Math.random() * 26,
+      age: 0, life: 1.1 + Math.random() * 0.9, r: 1.4 + Math.random() * 2.4,
+      rot: Math.random() * 6.284, spin: (Math.random() - 0.5) * 5,
+    });
+  }
+}
+
+function updateParts(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.age += dt;
+    if (p.age >= p.life) { parts.splice(i, 1); continue; }
+    if (p.k === 'smoke') {
+      p.vy -= 34 * dt;                                  // Auftrieb
+      p.vx += Math.sin(p.age * 2.6 + p.ph) * 26 * dt;   // Kräuseln
+      p.vx *= 1 - 1.15 * dt; p.vy *= 1 - 0.85 * dt;
+      p.rot += p.spin * dt;
+      if (p.age > 0.35) {
+        const f = (p.age / p.life);
+        hazeCtx.globalAlpha = 0.011 * p.a * (1 - f);
+        hazeCtx.drawImage(p.sp2, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+        hazeCtx.globalAlpha = 1;
+      }
+    } else if (p.k === 'ember') { p.vy += 240 * dt; p.vx *= 1 - 2 * dt; }
+    else { p.vy += 130 * dt; p.vx += Math.sin(p.age * 6 + p.ph) * 30 * dt; p.rot += p.spin * dt; }
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.k === 'smoke') p.r = p.r + (p.r1 - p.r) * Math.min(1, dt * 2.6);
+  }
+  for (let i = dying.length - 1; i >= 0; i--) {
+    dying[i].t += dt;
+    if (dying[i].t >= dying[i].dur) dying.splice(i, 1);
+  }
+  runPending(dt);
+}
+
+/* ---------------------------------------------------------- Stein-Logik */
+function brickColor(b) {
+  if (b.mucus && b.hp > 1) return { a: '#7f8f5e', b: '#4c5a34', edge: '#33401f' };
+  if (b.type === 'trachea') return { a: '#f0d3a6', b: '#c39a63', edge: '#8a6b42' };
+  if (b.type === 'bronchus') return { a: '#e7c39a', b: '#b98d5c', edge: '#7f5f39' };
+  if (b.type === 'bronchiole') return { a: '#e3ece0', b: '#a8bfa6', edge: '#6d8370' };
+  const hue = 352 - b.v * 30;
+  const l1 = 62 - b.v * 16, l2 = 44 - b.v * 14;
+  return { a: 'hsl(' + hue + ',62%,' + l1 + '%)', b: 'hsl(' + hue + ',58%,' + l2 + '%)', edge: 'hsl(' + hue + ',45%,' + (l2 - 14) + '%)' };
+}
+
+function destroyBrick(b, chained) {
+  b.alive = false; game.left--; game.popped++;
+  const col = brickColor(b);
+  dying.push({ x: b.x, y: b.y, w: b.w, h: b.h, t: 0, dur: 0.34, col: col, type: b.type });
+  const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+  const air = (b.type === 'trachea' || b.type === 'bronchus' || b.type === 'bronchiole');
+  puff(cx, cy, air ? 12 : 18, { box: b.w * 0.7, spread: 120, r0: 5, r1: 34, life: air ? 1.5 : 1.9, a: 0.44, tint: air ? 2 : (b.mucus ? 4 : Math.floor(Math.random() * 3)) });
+  puff(cx, cy, 4, { box: 4, spread: 55, r0: 3, r1: 13, life: 0.5, a: 0.5, tint: 3 });
+  embers(cx, cy, air ? 5 : 3, air ? '#ffe3a8' : '#ff9a6a');
+  noiseBurst(air ? 0.26 : 0.34, air ? 900 : 520, 0.8, 0.16);
+  game.tar += air ? 0.6 : 1;
+  let pts = (air ? 90 : 50) + game.level * 10;
+  if (chained) { pts = Math.round(pts * 0.5); ball.flare = Math.max(ball.flare, 0.08); }
+  else {
+    ball.flare = 0.22;
+    puff(ball.x, ball.y, 6, { spread: 90, r0: 4, r1: 22, life: 0.7, a: 0.3, tint: 1 });
+  }
+  game.score += pts;
+  powermsg.push({ x: cx, y: cy, t: 0, txt: '+' + pts, col: chained ? '#9fc3b4' : (air ? '#e6dcc0' : '#ffb79a') });
+
+  /* ATELEKTASE: fehlt die Luftzufuhr, fällt das Gewebe dahinter in sich
+     zusammen und löst sich ebenfalls in Rauch auf. */
+  if (air && !chained) {
+    const victims = [];
+    for (let rr = b.r - 2; rr <= b.r + 2; rr++) {
+      const row = grid[rr];
+      if (!row) continue;
+      for (let cc = b.c - 2; cc <= b.c + 2; cc++) {
+        const nb = row[cc];
+        if (!nb || !nb.alive || nb.type !== 'lobe') continue;
+        victims.push({ b: nb, d: Math.hypot(nb.x + nb.w / 2 - cx, nb.y + nb.h / 2 - cy) });
+      }
+    }
+    victims.sort(function (p, q) { return p.d - q.d; });
+    if (victims.length > 10) victims.length = 10;
+    for (const v of victims) pending.push({ b: v.b, t: 0.10 + v.d / 460 });
+    if (victims.length >= 2) {
+      powermsg.push({ x: cx, y: cy - 16, t: 0, txt: 'KOLLAPS x' + victims.length, col: '#bfe6d4' });
+      noiseBurst(0.5, 190, 0.6, 0.2);
+    }
+  }
+}
+
+function runPending(dt) {
+  for (let i = pending.length - 1; i >= 0; i--) {
+    pending[i].t -= dt;
+    if (pending[i].t > 0) continue;
+    const b = pending[i].b;
+    pending.splice(i, 1);
+    if (b && b.alive) { puff(b.x + b.w / 2, b.y + b.h / 2, 3, { spread: 40, r0: 4, r1: 20, life: 0.5, a: 0.3, tint: 0 }); destroyBrick(b, true); }
+  }
+}
+
+function hitBrick(b, nx, ny) {
+  ball.x += nx; ball.y += ny;
+  game.lastHit = game.t; ball.homing = false; ball.target = null;
+  if (nx) ball.vx = Math.abs(ball.vx) * (nx > 0 ? 1 : -1);
+  if (ny) ball.vy = Math.abs(ball.vy) * (ny > 0 ? 1 : -1);
+  b.hp--; b.flash = 0.14;
+  if (b.hp <= 0) { destroyBrick(b); }
+  else { tone(180, 0.06, 0.04, 'square'); embers(b.x + b.w / 2, b.y + b.h / 2, 2, '#ffd9a0'); }
+}
+
+function collideBricks() {
+  const r = ball.r;
+  const c0 = Math.max(0, Math.floor((ball.x - r - GRID.gx) / GRID.cw));
+  const c1 = Math.min(GRID.cols - 1, Math.floor((ball.x + r - GRID.gx) / GRID.cw));
+  const r0 = Math.max(0, Math.floor((ball.y - r - GRID.gy) / GRID.ch));
+  const r1 = Math.min(GRID.rows - 1, Math.floor((ball.y + r - GRID.gy) / GRID.ch));
+  for (let rr = r0; rr <= r1; rr++) {
+    for (let cc = c0; cc <= c1; cc++) {
+      const b = grid[rr] && grid[rr][cc];
+      if (!b || !b.alive) continue;
+      const ox = (b.w / 2 + r) - Math.abs(ball.x - (b.x + b.w / 2));
+      const oy = (b.h / 2 + r) - Math.abs(ball.y - (b.y + b.h / 2));
+      if (ox <= 0 || oy <= 0) continue;
+      if (ox < oy) hitBrick(b, ball.x < b.x + b.w / 2 ? -ox : ox, 0);
+      else hitBrick(b, 0, ball.y < b.y + b.h / 2 ? -oy : oy);
+      return;
+    }
+  }
+}
+
+/* Halt den Ball in spielbarem Winkel: nie zu flach, nie zu steil, Tempo konstant. */
+function ensureAngle() {
+  const minVy = ball.speed * 0.30, minVx = ball.speed * 0.22;
+  if (Math.abs(ball.vy) < minVy) ball.vy = (ball.vy < 0 ? -1 : 1) * minVy;
+  if (Math.abs(ball.vx) < minVx) ball.vx = (ball.vx < 0 ? -1 : 1) * minVx;
+  if (Math.abs(ball.vy) > ball.speed * 0.94) {
+    ball.vy = (ball.vy < 0 ? -1 : 1) * ball.speed * 0.94;
+    if (Math.abs(ball.vx) < minVx) ball.vx = (ball.vx < 0 ? -1 : 1) * minVx;
+  }
+  const sp = Math.hypot(ball.vx, ball.vy) || 1;
+  ball.vx *= ball.speed / sp; ball.vy *= ball.speed / sp;
+}
+
+/* Glühende Asche sucht sich ihr Ziel: wenn lange kein Stein getroffen wurde,
+   zieht der Ball sanft zum nächsten verbliebenen Stein (kein Festfahren). */
+let homingT = 0;
+function homeBall(dt) {
+  const idle = game.t - game.lastHit;
+  ball.homing = idle > 4.5;
+  if (!ball.homing) return;
+  homingT -= dt;
+  if (homingT <= 0 || !ball.target) {
+    homingT = 0.3;
+    let best = null, bd = 1e9;
+    for (const row of grid) {
+      for (const b of row) {
+        if (!b || !b.alive) continue;
+        const d = Math.hypot(b.x + b.w / 2 - ball.x, b.y + b.h / 2 - ball.y);
+        if (d < bd) { bd = d; best = b; }
+      }
+    }
+    ball.target = best ? { x: best.x + best.w / 2, y: best.y + best.h / 2 } : null;
+  }
+  if (!ball.target) return;
+  const dx = ball.target.x - ball.x, dy = ball.target.y - ball.y;
+  const d = Math.hypot(dx, dy) || 1;
+  const k = Math.min(1, (idle - 4.5) * 0.45) * ball.speed * 2.4;
+  ball.vx += (dx / d) * k * dt; ball.vy += (dy / d) * k * dt;
+  const sp = Math.hypot(ball.vx, ball.vy) || 1;
+  ball.vx *= ball.speed / sp; ball.vy *= ball.speed / sp;
+  if (Math.random() < dt * 30) embers(ball.x, ball.y, 1, '#ffd9a0');
+}
+
+/* --------------------------------------------------------- Spielablauf */
+function loseBall() {
+  // Der Ball löst sich vollständig in Rauch auf.
+  puff(ball.x, ball.y, 34, { box: 10, spread: 130, r0: 6, r1: 46, life: 2.4, a: 0.5, tint: 1 });
+  puff(ball.x, ball.y, 10, { spread: 60, r0: 4, r1: 18, life: 0.9, a: 0.45, tint: 0 });
+  noiseBurst(0.5, 300, 0.7, 0.2);
+  game.lives--;
+  if (game.lives <= 0) { game.state = 'over'; showOverlay('over'); return; }
+  paddle.w = paddleW();
+  say('Zigarette abgebrannt — ' + game.lives + ' ' + (game.lives === 1 ? 'Rest' : 'Rest'), 1.5);
+  ashFall(paddle.x + paddle.w / 2, paddle.y, 10);
+  game.state = 'dead'; game.freeze = 1.1;
+}
+
+function update(dt) {
+  game.t += dt;
+  if (game.toastT > 0) game.toastT -= dt;
+  for (let i = powermsg.length - 1; i >= 0; i--) { powermsg[i].t += dt; if (powermsg[i].t > 1) powermsg.splice(i, 1); }
+
+  /* Zigarette bewegen */
+  const prev = paddle.x;
+  if (paddle.mode === 'keys') {
+    const s = (paddle.keyR ? 1 : 0) - (paddle.keyL ? 1 : 0);
+    paddle.target = paddle.x + s * 760 * dt;
+  }
+  paddle.x += (paddle.target - paddle.x) * Math.min(1, dt * 20);
+  const half = paddle.w / 2;
+  if (paddle.x < GRID.gx * 0.4 + half) paddle.x = GRID.gx * 0.4 + half;
+  if (paddle.x > GRID.W - GRID.gx * 0.4 - half) paddle.x = GRID.W - GRID.gx * 0.4 - half;
+  paddle.vel = (paddle.x - prev) / Math.max(dt, 1e-4);
+
+  /* Glimmen & Rauch an der Zigarette */
+  if (Math.random() < dt * 26) {
+    const tip = paddle.x + half - 4;
+    puff(tip, paddle.y - 6, 1, { spread: 16, r0: 2.5, r1: 22, life: 2.2, a: 0.2, up: 40, tint: 0 });
+    if (Math.random() < 0.3) embers(tip, paddle.y - 4, 1, '#ff9c46');
+    if (Math.random() < 0.16) ashFall(tip, paddle.y + 3, 1);
+  }
+
+  if (game.freeze > 0) {
+    game.freeze -= dt;
+    if (game.freeze <= 0) {
+      if (game.advancing) {
+        game.advancing = false;
+        game.level++;
+        buildLevel(game.level);
+        say('Level ' + game.level + ' — mehr Tempo', 1.4);
+      }
+      if (game.lives > 0) { game.state = 'ready'; resetBall(); }
+    }
+    updateParts(dt);
+    return;
+  }
+  if (game.state !== 'play' && game.state !== 'ready') { updateParts(dt); return; }
+
+  if (ball.stuck) { ball.x = paddle.x; ball.y = paddle.y - 26; ball.flare = Math.max(0, ball.flare - dt); updateParts(dt); checkClear(); return; }
+
+  ball.flare = Math.max(0, ball.flare - dt);
+  ball.trail -= dt;
+  if (ball.trail <= 0) {
+    ball.trail = 0.035;
+    puff(ball.x, ball.y, 1, { spread: 16, r0: 2, r1: 16, life: 0.85, a: 0.17, tint: 1, up: 16 });
+  }
+
+  const steps = Math.max(1, Math.min(14, Math.ceil(ball.speed * dt / 5)));
+  const sdt = dt / steps;
+  for (let i = 0; i < steps; i++) {
+    ball.x += ball.vx * sdt; ball.y += ball.vy * sdt;
+
+    if (ball.x < ball.r) { ball.x = ball.r; ball.vx = Math.abs(ball.vx); tone(420, 0.05, 0.03, 'sine'); puff(ball.x, ball.y, 2, { spread: 40, r1: 12, life: 0.4, a: 0.2, tint: 0 }); }
+    else if (ball.x > GRID.W - ball.r) { ball.x = GRID.W - ball.r; ball.vx = -Math.abs(ball.vx); tone(420, 0.05, 0.03, 'sine'); puff(ball.x, ball.y, 2, { spread: 40, r1: 12, life: 0.4, a: 0.2, tint: 0 }); }
+    if (ball.y < ball.r) { ball.y = ball.r; ball.vy = Math.abs(ball.vy); tone(520, 0.05, 0.03, 'sine'); }
+
+    /* Zigarette */
+    if (ball.vy > 0 && ball.y + ball.r >= paddle.y - paddle.h / 2 && ball.y - ball.r <= paddle.y + paddle.h / 2) {
+      if (Math.abs(ball.x - paddle.x) <= paddle.w / 2 + ball.r * 0.6) {
+        ball.y = paddle.y - paddle.h / 2 - ball.r;
+        let t = (ball.x - paddle.x) / (paddle.w / 2);
+        t = Math.max(-1, Math.min(1, t));
+        if (Math.abs(ball.x - paddle.x) > paddle.w / 2) t = t > 0 ? 1 : -1;
+        const ang = -Math.PI / 2 + t * 1.05;
+        ball.vx = Math.cos(ang) * ball.speed + paddle.vel * 0.16;
+        ball.vy = Math.sin(ang) * ball.speed;
+        const sp = Math.hypot(ball.vx, ball.vy) || 1;
+        ball.vx *= ball.speed / sp; ball.vy *= ball.speed / sp;
+        if (ball.vy > -60) ball.vy = -60;
+        const tip = ball.x < paddle.x ? paddle.x - paddle.w / 2 : paddle.x + paddle.w / 2;
+        puff(tip, paddle.y - 4, 5, { spread: 70, r0: 3, r1: 22, life: 1.1, a: 0.3, tint: 3, up: 34 });
+        embers(tip, paddle.y - 2, 3, '#ff8f3d');
+        noiseBurst(0.16, 1200, 1.2, 0.09);
+      }
+    }
+
+    collideBricks();
+    homeBall(sdt);
+    ensureAngle();
+
+    if (ball.y > GRID.H + 40) { loseBall(); return; }
+  }
+
+  updateParts(dt);
+
+  checkClear();
+}
+
+function checkClear() {
+  if (game.state !== 'play' && game.state !== 'ready') return;
+  if (game.left > 0) return;
+  if (game.level >= MAX_LEVEL) { game.state = 'win'; game.best = Math.max(game.best, game.score); showOverlay('win'); }
+  else {
+    game.state = 'clear'; game.freeze = 1.9; game.score += 500 * game.level;
+    game.advancing = true;
+    say('Lunge frei! +' + (500 * game.level), 1.9);
+    for (let i = 0; i < 40; i++) puff(GRID.gx + Math.random() * (GRID.W - GRID.gx * 2), GRID.gy + Math.random() * GRID.fh, 1, { spread: 60, r0: 4, r1: 40, life: 2.4, a: 0.2, tint: 1 });
+  }
+}
+
+/* ----------------------------------------------------------- Rendering */
+function rr(c, x, y, w, h, r) {
+  const rad = Math.min(r, w / 2, h / 2);
+  c.beginPath();
+  c.moveTo(x + rad, y);
+  c.lineTo(x + w - rad, y); c.quadraticCurveTo(x + w, y, x + w, y + rad);
+  c.lineTo(x + w, y + h - rad); c.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+  c.lineTo(x + rad, y + h); c.quadraticCurveTo(x, y + h, x, y + h - rad);
+  c.lineTo(x, y + rad); c.quadraticCurveTo(x, y, x + rad, y);
+  c.closePath();
+}
+
+function drawBackdrop() {
+  ctx.clearRect(0, 0, GRID.W, GRID.H);
+  const g = ctx.createLinearGradient(0, 0, 0, GRID.H);
+  g.addColorStop(0, '#0d1520'); g.addColorStop(0.62, '#080c11'); g.addColorStop(1, '#05070a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, GRID.W, GRID.H);
+
+  // schematisches Raster
+  ctx.strokeStyle = 'rgba(120,160,200,.045)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let c = 0; c <= GRID.cols; c++) { const x = GRID.gx + c * GRID.cw; ctx.moveTo(x, GRID.gy - 10); ctx.lineTo(x, GRID.gy + GRID.fh + 10); }
+  for (let r = 0; r <= GRID.rows; r++) { const y = GRID.gy + r * GRID.ch; ctx.moveTo(GRID.gx - 10, y); ctx.lineTo(GRID.gx + GRID.W - GRID.gx * 2 + 10, y); }
+  ctx.stroke();
+
+  // Rippenbögen, nur Deko
+  ctx.strokeStyle = 'rgba(160,190,220,.05)'; ctx.lineWidth = 2;
+  for (let i = 0; i < 7; i++) {
+    const y = 150 + i * 62;
+    ctx.beginPath(); ctx.ellipse(CX, y + 190, 330 - i * 6, 210, 0, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  }
+}
+
+function drawGuide() {
+  ctx.save();
+  ctx.setLineDash([3, 6]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(170,200,230,.18)';
+  ctx.beginPath();
+  ctx.moveTo(CX - SHAPE.trachea.half, SHAPE.trachea.y0); ctx.lineTo(CX - SHAPE.trachea.half, SHAPE.trachea.y1);
+  ctx.moveTo(CX + SHAPE.trachea.half, SHAPE.trachea.y0); ctx.lineTo(CX + SHAPE.trachea.half, SHAPE.trachea.y1);
+  ctx.moveTo(CX - SHAPE.trachea.half, SHAPE.trachea.y0); ctx.lineTo(CX + SHAPE.trachea.half, SHAPE.trachea.y0);
+  for (const b of SHAPE.bronchus) { ctx.moveTo(SHAPE.carina.x, SHAPE.carina.y); ctx.lineTo(b.x2, b.y2); }
+  for (const b of SHAPE.bronchioles) { ctx.moveTo(b[0], b[1]); ctx.lineTo(b[2], b[3]); }
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(SHAPE.lung.left.cx, SHAPE.lung.cy, SHAPE.lung.left.rx, SHAPE.lung.ry, 0, 0, 6.284);
+  ctx.ellipse(SHAPE.lung.right.cx, SHAPE.lung.cy, SHAPE.lung.right.rx, SHAPE.lung.ry, 0, 0, 6.284);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(170,200,230,.10)';
+  ctx.beginPath();
+  for (const f of SHAPE.fissure) { ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+function drawBrick(b, alpha, scale) {
+  const col = brickColor(b);
+  const pad = 1.6;
+  const x = b.x + pad, y = b.y + pad, w = b.w - pad * 2, h = b.h - pad * 2;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (scale !== 1) {
+    ctx.translate(b.x + b.w / 2, b.y + b.h / 2); ctx.scale(scale, scale);
+    ctx.translate(-(b.x + b.w / 2), -(b.y + b.h / 2));
+  }
+  const isRing = b.type === 'trachea';
+  const bw = isRing ? w * 0.9 : w, bh = isRing ? h * 0.6 : h;
+  const bx = isRing ? x + (w - bw) / 2 : x, by = isRing ? y + (h - bh) / 2 : y;
+  const g = ctx.createLinearGradient(0, by, 0, by + bh);
+  g.addColorStop(0, col.a); g.addColorStop(1, col.b);
+  rr(ctx, bx, by, bw, bh, isRing ? bh / 2 : 5);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.lineWidth = 1; ctx.strokeStyle = col.edge; ctx.stroke();
+  // Glanzkante
+  ctx.globalAlpha = alpha * 0.5;
+  ctx.strokeStyle = 'rgba(255,255,255,.55)';
+  ctx.beginPath(); ctx.moveTo(bx + 4, by + 1.5); ctx.lineTo(bx + bw - 4, by + 1.5); ctx.stroke();
+  // Lungenbläschen-Textur
+  if (b.type === 'lobe') {
+    ctx.globalAlpha = alpha * 0.22; ctx.fillStyle = '#fff';
+    let s = b.seed;
+    for (let i = 0; i < 5; i++) {
+      s = (s * 37 + 11) % 89;
+      const px = bx + 5 + (s / 89) * (bw - 10);
+      s = (s * 53 + 7) % 89;
+      const py = by + 4 + (s / 89) * (bh - 8);
+      ctx.beginPath(); ctx.arc(px, py, 2.1 + (s % 3) * 0.5, 0, 6.284); ctx.fill();
+    }
+    if (b.maxhp > 1) { // Schleim-Blasen
+      ctx.globalAlpha = alpha * 0.5; ctx.fillStyle = 'rgba(215,235,190,.55)';
+      for (let i = 0; i < 3; i++) {
+        s = (s * 29 + 5) % 83;
+        ctx.beginPath(); ctx.arc(bx + 6 + (s / 83) * (bw - 12), by + bh * 0.5, 3.4, 0, 6.284); ctx.fill();
+      }
+    }
+  }
+  if (b.type === 'trachea') { // Knorpelringe
+    ctx.globalAlpha = alpha * 0.5; ctx.strokeStyle = 'rgba(90,60,30,.75)'; ctx.lineWidth = 2;
+    for (let i = 1; i <= 2; i++) { const yy = by + (bh * i) / 3; ctx.beginPath(); ctx.moveTo(bx + 3, yy); ctx.lineTo(bx + bw - 3, yy); ctx.stroke(); }
+  }
+  if (b.flash > 0) {
+    ctx.globalAlpha = Math.min(1, alpha + 0.35); ctx.fillStyle = 'rgba(255,255,255,' + (b.flash / 0.14 * 0.8) + ')';
+    rr(ctx, bx, by, bw, bh, 5); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawBricks() {
+  const breath = 0.5 + 0.5 * Math.sin(game.t * 1.15);   // Atemzug: Helligkeit pulsiert
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,116,84,' + (0.14 + 0.14 * breath).toFixed(3) + ')';
+  ctx.shadowBlur = 12;
+  const shade = 0.88 + 0.12 * breath;
+  for (const row of grid) {
+    for (const b of row) {
+      if (!b || !b.alive) continue;
+      if (b.flash > 0) b.flash -= 1 / 60;
+      drawBrick(b, shade, 1);
+    }
+  }
+  ctx.restore();
+  for (const d of dying) {
+    const f = d.t / d.dur;
+    ctx.save();
+    ctx.globalAlpha = (1 - f) * (1 - f);
+    const pad = f * d.w * 0.35;
+    const g = ctx.createLinearGradient(0, d.y, 0, d.y + d.h);
+    g.addColorStop(0, d.col.a); g.addColorStop(1, d.col.b);
+    rr(ctx, d.x + pad, d.y + pad * 0.6, d.w - pad * 2, d.h - pad * 1.2, 5);
+    ctx.fillStyle = g; ctx.filter = 'blur(' + (f * 3).toFixed(2) + 'px)'; ctx.fill(); ctx.filter = 'none';
+    ctx.restore();
+  }
+}
+
+function drawParticles() {
+  // abgelagerter Smog
+  ctx.save(); ctx.globalAlpha = 0.72; ctx.drawImage(hazeCanvas, 0, 0); ctx.restore();
+
+  ctx.save();
+  for (const p of parts) {
+    if (p.k !== 'smoke') continue;
+    const f = p.age / p.life;
+    const a = p.a * (f < 0.14 ? f / 0.14 : (1 - f)) ;
+    if (a <= 0.004) continue;
+    ctx.globalAlpha = Math.min(0.6, a);
+    ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+    ctx.drawImage(p.sp2, -p.r, -p.r, p.r * 2, p.r * 2);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of parts) {
+    if (p.k === 'ember') {
+      const a = 1 - p.age / p.life;
+      ctx.globalAlpha = a; ctx.fillStyle = p.col;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (0.5 + a * 0.8), 0, 6.284); ctx.fill();
+    } else if (p.k === 'ash') {
+      const a = 1 - p.age / p.life;
+      ctx.globalAlpha = a * 0.75; ctx.fillStyle = '#9aa1a8';
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.fillRect(-p.r, -p.r * 0.4, p.r * 2, p.r * 0.8); ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+function drawPaddle() {
+  const half = paddle.w / 2;
+  const x = paddle.x - half, y = paddle.y - paddle.h / 2, w = paddle.w, h = paddle.h;
+  const filterW = Math.max(26, w * 0.26);
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 5;
+  // Papier
+  rr(ctx, x, y, w, h, h / 2);
+  const pg = ctx.createLinearGradient(0, y, 0, y + h);
+  pg.addColorStop(0, '#fdfaf2'); pg.addColorStop(0.45, '#efe7d6'); pg.addColorStop(1, '#c9bfae');
+  ctx.fillStyle = pg; ctx.fill();
+  ctx.restore();
+
+  // Filter
+  ctx.save();
+  rr(ctx, x, y, filterW, h, h / 2); ctx.clip();
+  const fg = ctx.createLinearGradient(0, y, 0, y + h);
+  fg.addColorStop(0, '#e0a55e'); fg.addColorStop(0.5, '#c8823a'); fg.addColorStop(1, '#96581f');
+  ctx.fillStyle = fg; ctx.fillRect(x, y, filterW, h);
+  ctx.globalAlpha = 0.25; ctx.fillStyle = '#5c3410';
+  let s = 7;
+  for (let i = 0; i < 14; i++) { s = (s * 41 + 13) % 97; ctx.beginPath(); ctx.arc(x + 3 + (s / 97) * (filterW - 6), y + 3 + ((s * 7) % 97) / 97 * (h - 6), 1.1, 0, 6.284); ctx.fill(); }
+  ctx.globalAlpha = 0.5; ctx.strokeStyle = 'rgba(120,70,30,.7)'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(x + filterW - 5, y + 1); ctx.lineTo(x + filterW - 5, y + h - 1); ctx.stroke();
+  ctx.restore();
+  rr(ctx, x, y, filterW, h, h / 2); ctx.strokeStyle = 'rgba(90,50,20,.7)'; ctx.lineWidth = 1; ctx.stroke();
+
+  // Brandendes Ende
+  const burn = 10 + 4 * Math.sin(game.t * 9) + (LEN.length - game.lives) * 4;
+  ctx.save();
+  rr(ctx, x + w - burn, y, burn, h, h / 2); ctx.clip();
+  const bg = ctx.createLinearGradient(x + w - burn, 0, x + w, 0);
+  bg.addColorStop(0, 'rgba(140,140,140,.0)'); bg.addColorStop(0.35, '#8d8f92'); bg.addColorStop(0.7, '#ff8a34'); bg.addColorStop(1, '#ffd88f');
+  ctx.fillStyle = bg; ctx.fillRect(x + w - burn, y, burn, h);
+  ctx.globalAlpha = 0.55 + 0.35 * Math.sin(game.t * 13);
+  ctx.fillStyle = '#ff5f1e'; ctx.fillRect(x + w - 4, y, 4, h);
+  ctx.restore();
+  ctx.shadowColor = 'rgba(255,120,40,.55)'; ctx.shadowBlur = 22;
+  rr(ctx, x + w - 5, y + 1, 6, h - 2, 3); ctx.fillStyle = 'rgba(255,150,60,.75)'; ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Asche-Optik am Stängel
+  ctx.globalAlpha = 0.5; ctx.strokeStyle = 'rgba(120,120,120,.5)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x + filterW + 8, y + 2); ctx.lineTo(x + w - burn - 4, y + 2); ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Beschriftung
+  ctx.font = '600 8.5px ui-monospace, Consolas, monospace';
+  ctx.fillStyle = 'rgba(90,60,30,.75)'; ctx.textAlign = 'center';
+  ctx.fillText('FILTER', x + filterW / 2, y + h / 2 + 3);
+  ctx.restore();
+  ctx.textAlign = 'left';
+}
+
+function drawBall() {
+  const glow = 1 + ball.flare * 2.4;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(ball.x, ball.y, 0, ball.x, ball.y, ball.r * 4.4 * glow);
+  g.addColorStop(0, 'rgba(255,225,170,.9)');
+  g.addColorStop(0.35, 'rgba(255,140,60,.42)');
+  g.addColorStop(1, 'rgba(255,90,30,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r * 4.4 * glow, 0, 6.284); ctx.fill();
+  ctx.restore();
+
+  if (ball.homing && ball.target) {
+    ctx.save();
+    ctx.globalAlpha = 0.10 + 0.06 * Math.sin(game.t * 6);
+    ctx.strokeStyle = '#ffd9a0'; ctx.lineWidth = 1; ctx.setLineDash([2, 8]);
+    ctx.beginPath(); ctx.moveTo(ball.x, ball.y); ctx.lineTo(ball.target.x, ball.target.y); ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 1 - ball.flare * 1.6;   // beim Auflösen in Rauch kurz durchscheinend
+  const core = ctx.createRadialGradient(ball.x - 2.5, ball.y - 3, 1, ball.x, ball.y, ball.r);
+  core.addColorStop(0, '#fff6e2'); core.addColorStop(0.5, '#ffb257'); core.addColorStop(1, '#c2410c');
+  ctx.fillStyle = core; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, 6.284); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,235,190,.75)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r - 0.5, 0, 6.284); ctx.stroke();
+  ctx.restore();
+
+  if (ball.stuck && game.state === 'ready') {
+    ctx.save();
+    ctx.globalAlpha = 0.5 + 0.3 * Math.sin(game.t * 5);
+    ctx.fillStyle = '#e8f0f8'; ctx.font = '600 13px ui-monospace, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('LEERTASTE / KLICK = ABSCHUSS', paddle.x, paddle.y - 52);
+    ctx.restore(); ctx.textAlign = 'left';
+  }
+}
+
+function drawHUD() {
+  ctx.save();
+  ctx.font = '700 12px ui-monospace, Consolas, monospace';
+  try { ctx.letterSpacing = '2px'; } catch (e) {}
+  ctx.fillStyle = 'rgba(150,175,200,.55)';
+  ctx.fillText('PUNKTE', 22, 28);
+  ctx.fillText('LEVEL', 150, 28);
+  ctx.fillText('RAUCH', 236, 28);
+  ctx.fillText('STEINE', 340, 28);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(String(game.score).padStart(6, '0'), 22, 46);
+  ctx.fillText(game.level + '/' + MAX_LEVEL, 150, 46);
+  ctx.fillText(game.popped + '', 340, 46);
+  try { ctx.letterSpacing = '0px'; } catch (e) {}
+
+  // Rauch-Meter
+  const mw = 62, mh = 8, mx = 236, my = 39;
+  ctx.strokeStyle = 'rgba(150,175,200,.4)'; ctx.lineWidth = 1; ctx.strokeRect(mx + 0.5, my + 0.5, mw, mh);
+  const f = Math.min(1, game.tar / Math.max(1, game.total));
+  const g = ctx.createLinearGradient(mx, 0, mx + mw, 0);
+  g.addColorStop(0, '#c9cdd2'); g.addColorStop(1, '#6d7278');
+  ctx.fillStyle = g; ctx.fillRect(mx + 1, my + 1, (mw - 2) * f, mh - 2);
+
+  // Leben: winzige Zigaretten
+  for (let i = 0; i < LEN.length; i++) {
+    const lx = GRID.W - 22 - (i + 1) * 46, ly = 30;
+    const on = i < game.lives;
+    ctx.globalAlpha = on ? 1 : 0.22;
+    const lw = LEN[i];
+    rr(ctx, lx, ly, 38, 7, 3.5);
+    ctx.fillStyle = on ? '#f3ecdd' : '#6b7480'; ctx.fill();
+    ctx.save(); rr(ctx, lx, ly, 11, 7, 3.5); ctx.clip();
+    ctx.fillStyle = on ? '#c8823a' : '#5f6873'; ctx.fillRect(lx, ly, 11, 7); ctx.restore();
+    if (on) { ctx.fillStyle = '#ff7a2f'; ctx.beginPath(); ctx.arc(lx + 37, ly + 3.5, 2.6, 0, 6.284); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(150,175,200,.5)'; ctx.font = '9px ui-monospace, Consolas, monospace';
+    ctx.fillText(lw + 'mm', lx, ly + 19);
+  }
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(150,175,200,.55)'; ctx.font = '700 11px ui-monospace, Consolas, monospace';
+  ctx.fillText('RESTLICHE ZIGI', GRID.W - 22, 62);
+  ctx.restore();
+  ctx.textAlign = 'left';
+
+  // Toast
+  if (game.toastT > 0) {
+    const a = Math.min(1, game.toastT * 2.2);
+    ctx.save();
+    ctx.globalAlpha = a; ctx.textAlign = 'center';
+    ctx.font = '700 26px "Segoe UI", system-ui, sans-serif';
+    ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 14;
+    ctx.fillStyle = '#fff';
+    ctx.fillText(game.toast, GRID.W / 2, 560);
+    ctx.restore(); ctx.textAlign = 'left';
+  }
+
+  // Punkte-Einblendungen
+  ctx.font = '700 12px ui-monospace, Consolas, monospace';
+  for (const m of powermsg) {
+    const f2 = m.t;
+    ctx.globalAlpha = 1 - f2;
+    ctx.fillStyle = m.col;
+    ctx.textAlign = 'center';
+    ctx.fillText(m.txt, m.x, m.y - 10 - f2 * 26);
+  }
+  ctx.globalAlpha = 1; ctx.textAlign = 'left';
+}
+
+let DPR = 1;
+function fit() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(GRID.W * DPR); canvas.height = Math.round(GRID.H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+
+function render() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  drawBackdrop();
+  ctx.save(); ctx.globalAlpha = 0.75; ctx.drawImage(hazeCanvas, 0, 0); ctx.restore();
+  drawGuide();
+  drawBricks();
+  drawParticles();
+  drawPaddle();
+  drawBall();
+  drawHUD();
+  if (game.state === 'pause') {
+    ctx.fillStyle = 'rgba(5,8,11,.6)'; ctx.fillRect(0, 0, GRID.W, GRID.H);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.font = '700 30px "Segoe UI", system-ui, sans-serif';
+    try { ctx.letterSpacing = '6px'; } catch (e) {}
+    ctx.fillText('PAUSE', GRID.W / 2, GRID.H / 2);
+    try { ctx.letterSpacing = '0px'; } catch (e) {}
+    ctx.textAlign = 'left';
+  }
+}
+
+/* ------------------------------------------------------- Einblendungen */
+function showOverlay(kind) {
+  let html = '';
+  if (kind === 'menu') {
+    html = '<div class="card"><h2>LUNG<em>OUT</em></h2>' +
+      '<p class="sub">Willkommen in deinen Lungenflügeln. Sie sind noch rosa, sie machen noch alles mit und sie fragen nicht nach.<br>' +
+      'Zieh durch: ein Zug, ein Ball, ein Stein weniger. Schaffst du es, sie mit dem Rauchen kaputtzukriegen, schaffst du das in ein paar Minuten und vier Bällen — ' +
+      'draußen brauchst du dafür dreißig Jahre und zwei Schachteln am Tag. Und ein „Nochmal“ gibt es dort nicht.</p>' +
+      '<button class="btn" id="start">ANZÜNDEN</button></div>';
+  } else if (kind === 'clear') {
+    html = '<div class="card"><h2>LUNGE <em>FREI</em></h2><p class="sub">Level ' + game.level + ' geräumt — weiter mit mehr Tempo und Schleim.</p>' +
+      '<button class="btn" id="start">WEITER</button></div>';
+  } else if (kind === 'over') {
+    html = '<div class="card"><h2>ATEM&shy;STILL</h2><p class="sub">Die Zigarette ist abgebrannt. Du hast ' + game.popped +
+      ' Steine zu Rauch gemacht — das entspricht etwa <b>' + (game.popped / 20).toFixed(1) + ' Schachteln</b> in der Lunge.</p>' +
+      '<div class="stats"><div>Punkte<s>' + game.score + '</s></div><div>Level<s>' + game.level + '/' + MAX_LEVEL + '</s></div><div>Best<s>' + Math.max(game.best, game.score) + '</s></div></div>' +
+      '<button class="btn" id="start">NOCHMAL</button></div>';
+  } else if (kind === 'win') {
+    html = '<div class="card"><h2>LUNGE <em>WIEDER FREI</em></h2><p class="sub">Alle ' + MAX_LEVEL + ' Level geräumt, ' + game.popped +
+      ' Steine in Rauch aufgelöst. Tief durchatmen.</p>' +
+      '<div class="stats"><div>Punkte<s>' + game.score + '</s></div><div>Rauch<s>' + (game.popped / 20).toFixed(1) + ' Schachteln</s></div><div>Best<s>' + Math.max(game.best, game.score) + '</s></div></div>' +
+      '<button class="btn" id="start">NOCHMAL</button></div>';
+  }
+  overlay.innerHTML = html;
+  overlay.hidden = false;
+  const b = document.getElementById('start');
+  if (b) b.onclick = function () { onButton(); };
+}
+function hideOverlay() { overlay.hidden = true; overlay.innerHTML = ''; }
+
+function startGame(fresh) {
+  if (fresh) {
+    game.score = 0; game.level = 1; game.lives = LEN.length; game.popped = 0;
+  } else {
+    game.level++;
+  }
+  hideOverlay();
+  buildLevel(game.level);
+  game.state = 'ready';
+  say('Level ' + game.level, 1.2);
+}
+function onButton() {
+  if (AC && AC.state === 'suspended') AC.resume();
+  const fresh = game.state === 'menu' || game.state === 'over' || game.state === 'win';
+  if (game.state === 'clear') startGame(false);
+  else { game.best = Math.max(game.best, game.score); startGame(fresh); }
+}
+
+/* ------------------------------------------------------------- Eingabe */
+function pointerX(e) {
+  const rect = canvas.getBoundingClientRect();
+  return (e.clientX - rect.left) * (GRID.W / rect.width);
+}
+canvas.addEventListener('pointermove', function (e) {
+  paddle.mode = 'pointer';
+  paddle.target = pointerX(e);
+});
+canvas.addEventListener('pointerdown', function (e) {
+  paddle.mode = 'pointer'; paddle.target = pointerX(e);
+  if (game.state === 'ready') launch();
+  else if (game.state === 'menu' || game.state === 'over' || game.state === 'win') onButton();
+});
+window.addEventListener('keydown', function (e) {
+  const k = e.key.toLowerCase();
+  if (k === 'arrowleft' || k === 'a') { paddle.mode = 'keys'; paddle.keyL = true; }
+  if (k === 'arrowright' || k === 'd') { paddle.mode = 'keys'; paddle.keyR = true; }
+  if (k === ' ' || k === 'enter') {
+    e.preventDefault();
+    if (game.state === 'ready') launch();
+    else if (game.state === 'menu' || game.state === 'over' || game.state === 'win' || game.state === 'clear') onButton();
+  }
+  if (k === 'p') {
+    if (game.state === 'play' || game.state === 'ready') { game.state = 'pause'; }
+    else if (game.state === 'pause') { game.state = ball.stuck ? 'ready' : 'play'; }
+  }
+  if (k === 'r') { game.best = Math.max(game.best, game.score); startGame(true); }
+  if (k === 'm') { muted = !muted; say(muted ? 'Ton aus' : 'Ton an', 0.8); }
+});
+window.addEventListener('keyup', function (e) {
+  const k = e.key.toLowerCase();
+  if (k === 'arrowleft' || k === 'a') paddle.keyL = false;
+  if (k === 'arrowright' || k === 'd') paddle.keyR = false;
+});
+
+/* ----------------------------------------------------------- Hauptloop */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.033, (now - last) / 1000);
+  last = now;
+  if (game.state === 'ready' || game.state === 'play' || game.state === 'dead' || game.state === 'clear') update(dt);
+  else if (game.state !== 'pause') { game.t += dt; updateParts(dt); }
+  render();
+  requestAnimationFrame(frame);
+}
+
+fit();
+window.addEventListener('resize', fit);
+buildLevel(1);
+game.state = 'menu';
+showOverlay('menu');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
