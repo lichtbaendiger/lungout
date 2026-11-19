@@ -1,8 +1,9 @@
-/* Baut vorschau.html (1200x630) inkl. echtem Lungen-Layout aus ../index.html
-   und rendert daraus mit Headless-Chrome ../vorschau.png (og:image-Format).
-   Start im Spielordner:  node bildquelle\_og.mjs   */
+/* Open-Graph-Cover: baut tools/og.html (1200x630) mit dem echten Lungen-Layout
+   aus ../index.html und rendert daraus img/og-cover.png mit Headless-Chrome.
+   Start im Projektordner:  node tools\og.mjs   */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const dir = new URL('./', import.meta.url);
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
@@ -181,16 +182,17 @@ ctx.font = '400 13px "Segoe UI", sans-serif'; ctx.fillStyle = '#8ea0b2';
 ctx.fillText('Breakout für Leute, die wissen, wie das endet.', TX + dw + 60, 521);
 </script></body></html>`;
 
-writeFileSync(new URL('./vorschau.html', dir), page, 'utf8');
+writeFileSync(new URL('./og.html', dir), page, 'utf8');
 
 const chrome = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const out = 'C:\\Users\\Thermaltake\\Desktop\\strata\\lungouth\\vorschau.png';
+const out = fileURLToPath(new URL('../img/og-cover.png', import.meta.url));
+const cover = 'file:///' + fileURLToPath(new URL('./og.html', import.meta.url)).replace(/\\/g, '/');
 execFileSync(chrome, [
   '--headless=new', '--disable-gpu', '--hide-scrollbars',
   '--user-data-dir=' + process.env.TEMP + '\\ogprof',
   '--window-size=1200,630', '--force-device-scale-factor=1',
   '--virtual-time-budget=3000',
   '--screenshot=' + out,
-  'file:///C:/Users/Thermaltake/Desktop/strata/lungouth/bildquelle/vorschau.html',
+  cover,
 ], { stdio: 'pipe' });
-console.log('vorschau.png erzeugt');
+console.log('img/og-cover.png erzeugt: ' + out);
