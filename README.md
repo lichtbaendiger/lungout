@@ -70,8 +70,17 @@ node tools\og.mjs
 
 ## Veröffentlichen
 
-Auf den Server gehören nur **`index.html`** und **`img/og-cover.png`** – der
-`tools/`-Ordner ist nur die Bauhilfe für das Vorschaubild. Die Meta-Tags zeigen
-auf `https://www.lungout.de/`. Nach dem ersten Teilen in Facebook das Bild im
+Der Spielordner läuft über **GitHub Pages**:
+<https://lichtbaendiger.github.io/lungout/>
+(Settings → Pages → Source: Branch `main` / Ordner `/ (root)`).
+
+Ausgeliefert werden `index.html` und `img/` – der Ordner `tools/` ist nur die
+Bauhilfe für das Vorschaubild und wird nicht gebraucht.
+
+Die Meta-Tags (`og:url`, `og:image`, `twitter:image`, `canonical`) zeigen auf die
+Pages-Adresse. Beim Umzug auf eine eigene Domain (z. B. `lungout.de`) diese vier
+Zeilen im Kopf von `index.html` austauschen.
+
+Nach dem ersten Teilen in Facebook das Vorschaubild im
 [Sharing Debugger](https://developers.facebook.com/tools/debug/) mit „Alles neu
 abrufen" neu einlesen lassen.
